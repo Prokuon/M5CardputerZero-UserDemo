@@ -55,23 +55,52 @@ struct tca8418_keymap_entry {
     const char *utf8;
 };
 static const struct tca8418_keymap_entry tca8418_keymap[] = {
-    { 183, "exclam",       "!" },  { 184, "at",           "@" },
-    { 185, "numbersign",   "#" },  { 186, "dollar",       "$" },
-    { 187, "percent",      "%" },  { 188, "asciicircum",  "^" },
-    { 189, "ampersand",    "&" },  { 190, "asterisk",     "*" },
-    { 191, "parenleft",    "(" },  { 192, "parenright",   ")" },
-    { 193, "asciitilde",   "~" },  { 194, "grave",        "`" },
-    { 195, "plus",         "+" },  { 196, "minus",        "-" },
-    { 197, "slash",        "/" },  { 198, "backslash",    "\\" },
-    { 199, "braceleft",    "{" },  { 200, "braceright",   "}" },
-    { 201, "bracketleft",  "[" },  { 202, "bracketright", "]" },
-    { 203, "bar",          "|" },  { 204, "equal",        "=" },
-    { 205, "colon",        ":" },  { 206, "semicolon",    ";" },
-    { 207, "underscore",   "_" },  { 208, "question",     "?" },
-    { 209, "less",         "<" },  { 210, "greater",      ">" },
-    { 211, "apostrophe",   "'" },  { 212, "quotedbl",     "\"" },
-    { 213, "period",       "." },
+    { 183, "exclam",       "!"  },
+
+    { 184, "at",           "@"  },
+    { 185, "numbersign",   "#"  },
+    { 186, "dollar",       "$"  },
+    { 187, "percent",      "%"  },
+    { 188, "asciicircum",  "^"  },
+    { 189, "ampersand",    "&"  },
+    { 190, "asterisk",     "*"  },
+    { 191, "parenleft",    "("  },
+    { 192, "parenright",   ")"  },
+
+    { 193, "asciitilde",   "~"  },
+    { 194, "grave",        "`"  },
+    { 195, "plus",         "+"  },
+    { 196, "minus",        "-"  },
+    { 197, "slash",        "/"  },
+    { 198, "backslash",    "\\" },
+    { 199, "braceleft",    "{"  },
+    { 200, "braceright",   "}"  },
+    { 201, "bracketleft",  "["  },
+    { 202, "bracketright", "]"  },
+
+    { 231, "comma",        ","  },
+    { 232, "period",       "."  },
+    { 233, "bar",          "|"  },
+    { 209, "equal",        "="  },
+    { 210, "colon",        ":"  },
+    { 211, "semicolon",    ";"  },
+    { 212, "underscore",   "_"  },
+    { 213, "question",     "?"  },
+
+    { 214, "less",         "<"  },
+    { 215, "greater",      ">"  },
+    { 216, "apostrophe",   "'"  },
+    { 217, "quotedbl",     "\"" },
 };
+
+
+
+
+
+
+
+
+
 #define TCA8418_KEYMAP_SIZE (sizeof(tca8418_keymap)/sizeof(tca8418_keymap[0]))
 
 static const struct tca8418_keymap_entry *

@@ -332,11 +332,12 @@ void main_key_switch(lv_event_t * e)
                 printf("按下: DOWN\r\n");
                 break;
             case LV_KEY_LEFT:
+            case 'z':
                 printf("按下: LEFT\r\n");
                 switchyou(NULL);
-                
                 break;
             case LV_KEY_RIGHT:
+            case 'c':
                 printf("按下: RIGHT\r\n");
                 switchzuo(NULL);
                 break;

@@ -494,6 +494,7 @@ private:
             switch (key)
             {
             case LV_KEY_UP:
+            case 'f':
                 {
                     uint16_t sel = lv_roller_get_selected(ui_obj_["ui_roller"]);
                     if(sel > 0) {
@@ -505,6 +506,7 @@ private:
                 }
                 break;
             case LV_KEY_DOWN:
+            case 'x':
                 {
                     uint16_t sel = lv_roller_get_selected(ui_obj_["ui_roller"]);
                     uint16_t cnt = (uint16_t)current_list.size(); // 以current_list大小为上界，防止越界
@@ -517,9 +519,11 @@ private:
                 }
                 break;
             case LV_KEY_LEFT:
+            case 'z':
                 switch_zuo();
                 break;
             case LV_KEY_RIGHT:
+            case 'c':
                 switch_you();
                 break;
             case 15:           /* Tab 键经 main.cpp 映射为 'i'，避免被 LVGL group 拦截 */

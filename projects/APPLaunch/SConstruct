@@ -2,6 +2,8 @@ from pathlib import Path
 import os, sys
 import shutil
 import socket
+import platform
+arch = platform.machine()
 
 
 version = "v0.0.1"
@@ -9,8 +11,8 @@ static_lib = "static_lib"
 update = False
 
 
-# 交叉编译到 CardputerZero
-if False:
+# export CardputerZero=y 交叉编译到 CardputerZero
+if 'CardputerZero' in os.environ:
     if not os.path.exists("build/config/config_tmp.mk"):
         os.makedirs("build/config", exist_ok=True)
         with open("build/config/config_tmp.mk", "w") as f:
@@ -22,17 +24,15 @@ if False:
             # f.write('CONFIG_TOOLCHAIN_PATH="/opt/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin"\n')
             f.write('CONFIG_TOOLCHAIN_PREFIX="aarch64-linux-gnu-"\n')
             f.write(f'''CONFIG_TOOLCHAIN_SYSROOT="{os.path.join(sys.path[0], "static_lib")}"\n''')
-
-
 # x86_64 本地模拟器
-if True:
+elif arch != "aarch64":
     if not os.path.exists("build/config/config_tmp.mk"):
         os.makedirs("build/config", exist_ok=True)
         with open("build/config/config_tmp.mk", "w") as f:
             f.write("CONFIG_V9_5_LV_USE_SDL=y\n")
 
 # CardputerZero 本机编译
-if False:
+else:
     if not os.path.exists("build/config/config_tmp.mk"):
         os.makedirs("build/config", exist_ok=True)
         with open("build/config/config_tmp.mk", "w") as f:

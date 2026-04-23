@@ -105,19 +105,15 @@ sudo apt install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 修改 `projects/UserDemo/SConstruct`，将 SDL2 后端切换为 Framebuffer 后端：
 
 ```python
-# 将以下代码块的 if True 改为 if False（禁用 SDL2）：
-if False:   # <-- 改为 False
-    if not os.path.exists('build/config/config_tmp.mk'):
-        ...
-        f.write('CONFIG_V9_5_LV_USE_SDL=y\n')
+# 1、
+# 直接编译为x86的sdl后端，可在x86主机上模拟运行
 
-# 将以下代码块的 if False 改为 if True（启用 Framebuffer）：
-if True:    # <-- 改为 True
-    if not os.path.exists('build/config/config_tmp.mk'):
-        ...
-        f.write('CONFIG_V9_5_LV_USE_LINUX_FBDEV=y\n')
-        f.write('CONFIG_V9_5_LV_DRAW_SW_ASM_NEON=y\n')
-        f.write('CONFIG_TOOLCHAIN_PREFIX="aarch64-linux-gnu-"\n')
+# 2、
+export CardputerZero=y 
+#交叉编译到 CardputerZero
+
+# 3、
+# 在 CardputerZero 上编译时，会直接编译到 CardputerZero 可用的程序
 ```
 
 然后编译：
