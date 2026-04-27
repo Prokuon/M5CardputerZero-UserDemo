@@ -44,7 +44,10 @@ for src in lvgl_component['SRCS']:
 
 STATIC_FILES += [ADir('ui/images')]
 
-env['COMPONENTS'].append({'target':'M5CardputerZero-UserDemo',
+# REQUIREMENTS += ['Backward_cpp']
+
+
+env['COMPONENTS'].append({'target':'M5CardputerZero-APPLaunch',
                           'SRCS':SRCS,
                           'INCLUDE':INCLUDE,
                           'PRIVATE_INCLUDE':PRIVATE_INCLUDE,
