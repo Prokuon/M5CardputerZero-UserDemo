@@ -315,11 +315,9 @@ void main_key_switch(lv_event_t *e)
         case KEY_DOWN:
             break;
         case KEY_LEFT:
-        case KEY_Z:
             switchyou(NULL);
             break;
         case KEY_RIGHT:
-        case KEY_C:
             switchzuo(NULL);
             break;
         default:

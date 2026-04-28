@@ -554,12 +554,10 @@ private:
                 switch (key)
                 {
                 case KEY_UP:
-                case KEY_F:
                     if (scroll)
                         lv_obj_scroll_by(scroll, 0, -20, LV_ANIM_ON);
                     break;
                 case KEY_DOWN:
-                case KEY_X:
                     if (scroll)
                         lv_obj_scroll_by(scroll, 0, 20, LV_ANIM_ON);
                     break;
@@ -576,7 +574,6 @@ private:
             switch (key)
             {
             case KEY_UP:
-            case KEY_F:
                 {
                     uint16_t sel = lv_roller_get_selected(ui_obj_["ui_roller"]);
                     if(sel > 0) {
@@ -588,10 +585,9 @@ private:
                 }
                 break;
             case KEY_DOWN:
-            case KEY_X:
                 {
                     uint16_t sel = lv_roller_get_selected(ui_obj_["ui_roller"]);
-                    uint16_t cnt = (uint16_t)current_list.size(); // 以current_list大小为上界，防止越界
+                    uint16_t cnt = (uint16_t)current_list.size();
                     if(sel + 1 < cnt) {
                         sel = sel + 1;
                         lv_roller_set_selected(ui_obj_["ui_roller"], sel, LV_ANIM_ON);
@@ -601,11 +597,9 @@ private:
                 }
                 break;
             case KEY_LEFT:
-            case KEY_Z:
                 switch_zuo();
                 break;
             case KEY_RIGHT:
-            case KEY_C:
                 switch_you();
                 break;
             case KEY_TAB:           /* Tab 键经 main.cpp 映射为 'i'，避免被 LVGL group 拦截 */

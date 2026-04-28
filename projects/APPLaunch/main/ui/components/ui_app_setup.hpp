@@ -278,11 +278,9 @@ private:
         }
         switch (key) {
         case KEY_UP:
-        case KEY_F:
             if (wifi_sel_ > 0) { --wifi_sel_; wifi_build_ap_rows(); }
             break;
         case KEY_DOWN:
-        case KEY_X:
             if (wifi_sel_ < wifi_ap_count_ - 1) { ++wifi_sel_; wifi_build_ap_rows(); }
             break;
         case KEY_R:
@@ -322,6 +320,7 @@ private:
     void show_wifi_pw_input()
     {
         view_state_ = ViewState::WIFI_PW;
+        DIRECTION_KEY_MODE = 0;
         lv_obj_t *content = ui_obj_.count("sub_content") ? ui_obj_["sub_content"] : nullptr;
         if (!content) return;
         lv_obj_clean(content);
@@ -348,6 +347,7 @@ private:
     void handle_wifi_pw_key(uint32_t key)
     {
         if (key == KEY_ESC) {
+            DIRECTION_KEY_MODE = 1;
             view_state_ = ViewState::SUB;
             lv_obj_t *content = ui_obj_.count("sub_content") ? ui_obj_["sub_content"] : nullptr;
             if (content) {
@@ -360,6 +360,7 @@ private:
             if (pw_hint_lbl_)
                 lv_label_set_text(pw_hint_lbl_, "Connecting...");
             int ret = hal_wifi_connect(wifi_pw_ssid_.c_str(), wifi_pw_buf_.c_str());
+            DIRECTION_KEY_MODE = 1;
             view_state_ = ViewState::SUB;
             lv_obj_t *content = ui_obj_.count("sub_content") ? ui_obj_["sub_content"] : nullptr;
             if (content) {
@@ -479,14 +480,12 @@ private:
         if (step < 1) step = 1;
         switch (key) {
         case KEY_LEFT:
-        case KEY_D:
             bright_val_ -= step;
             if (bright_val_ < 1) bright_val_ = 1;
             hal_backlight_write(bright_val_);
             update_bright_ui();
             break;
         case KEY_RIGHT:
-        case KEY_C:
             bright_val_ += step;
             if (bright_val_ > mx) bright_val_ = mx;
             hal_backlight_write(bright_val_);
@@ -537,7 +536,6 @@ private:
     {
         switch (key) {
         case KEY_LEFT:
-        case KEY_D:
             vol_val_ -= 3;
             if (vol_val_ < 0) vol_val_ = 0;
             hal_volume_write(vol_val_);
@@ -545,7 +543,6 @@ private:
             update_vol_ui();
             break;
         case KEY_RIGHT:
-        case KEY_C:
             vol_val_ += 3;
             if (vol_val_ > 63) vol_val_ = 63;
             hal_volume_write(vol_val_);
@@ -916,7 +913,6 @@ private:
         switch (key)
         {
         case KEY_UP:
-        case KEY_F:
             if (selected_idx_ > 0) {
                 --selected_idx_;
                 build_menu_rows();
@@ -924,7 +920,6 @@ private:
             break;
 
         case KEY_DOWN:
-        case KEY_X:
             if (selected_idx_ < count - 1) {
                 ++selected_idx_;
                 build_menu_rows();
@@ -933,7 +928,6 @@ private:
 
         case KEY_ENTER:
         case KEY_RIGHT:
-        case KEY_C:
             open_sub_page(selected_idx_);
             break;
 
@@ -961,13 +955,11 @@ private:
         switch (key)
         {
         case KEY_UP:
-        case KEY_F:
             if (content)
                 lv_obj_scroll_by(content, 0, -20, LV_ANIM_ON);
             break;
 
         case KEY_DOWN:
-        case KEY_X:
             if (content)
                 lv_obj_scroll_by(content, 0, 20, LV_ANIM_ON);
             break;

@@ -356,11 +356,9 @@ private:
         int count = (int)stock_items_.size();
         switch (key) {
         case KEY_UP:
-        case KEY_F:
             if (selected_idx_ > 0) { --selected_idx_; build_stock_rows(); }
             break;
         case KEY_DOWN:
-        case KEY_X:
             if (selected_idx_ < count - 1) { ++selected_idx_; build_stock_rows(); }
             break;
         case KEY_ESC:

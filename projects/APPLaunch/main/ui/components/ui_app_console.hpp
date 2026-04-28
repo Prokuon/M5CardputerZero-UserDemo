@@ -69,6 +69,7 @@ public:
 public:
     UIConsolePage() : app_base()
     {
+        DIRECTION_KEY_MODE = 0;
         console_data_init();
         creat_console_UI();
         event_handler_init();
@@ -76,6 +77,7 @@ public:
 
     ~UIConsolePage()
     {
+        DIRECTION_KEY_MODE = 1;
         terminal_active = false;
         if (poll_timer)
         {
