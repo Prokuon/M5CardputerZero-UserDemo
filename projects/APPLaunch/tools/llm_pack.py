@@ -101,6 +101,7 @@ def create_applaunch_deb(version='0.1', src_folder='../dist', revision='m5stack1
 
     # ------------------------------------------------------- share/images/  (recursive *.png under src_folder)
     png_files = glob.glob(os.path.join(src_folder, '**', '*.png'), recursive=True)
+    png_files += glob.glob(os.path.join(src_folder, '**', '*.gif'), recursive=True)
     if png_files:
         for f in png_files:
             shutil.copy2(f, os.path.join(deb_folder, SHARE_PATH, 'images'))

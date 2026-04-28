@@ -23,6 +23,7 @@
 #include "ui_obj.h"
 #undef UI_DEFINE_OBJECT
 #undef UI_DEFINE_EVENT_FUN
+lv_obj_t * startup_gif;
 
 // CUSTOM VARIABLES
 int Animation_time = 200;
@@ -129,6 +130,30 @@ void font_manager_init(void)
 
 ///////////////////// SCREENS ////////////////////
 
+void home_screen_load()
+{
+    ui____initial_actions0 = lv_obj_create(NULL);
+    lv_disp_load_scr(ui_Screen1);
+    lv_indev_set_group(lv_indev_get_next(NULL), Screen1group);
+}
+
+void ui_event_logo_over(lv_event_t * e) { 
+    lv_event_code_t event_code = lv_event_get_code(e); 
+    if(event_code == LV_EVENT_READY) {
+        home_screen_load();
+        lv_obj_del(startup_gif);
+    } 
+}
+
+void start_startup_gif()
+{
+    startup_gif = lv_gif_create(NULL);
+    lv_gif_set_src(startup_gif, "share/images/logo_output.gif");
+    lv_obj_center(startup_gif);
+    lv_obj_add_event_cb(startup_gif, ui_event_logo_over, LV_EVENT_ALL, NULL);
+    lv_disp_load_scr(startup_gif);
+}
+
 void ui_init(void)
 {
     font_manager_init(); // 先注释掉字体加载，测试UI能不能显示
@@ -143,8 +168,6 @@ void ui_init(void)
     // 初始化各个界面
     ui_Screen1_screen_init();
 
-
-
     // 界面信息绑定
     ui_info_bind();
     launch_circle_init();
@@ -152,8 +175,9 @@ void ui_init(void)
     // 初始化输入组
     input_group_init();
 
+    // 显示开机动画
+    start_startup_gif();
+
     // 显示 home 界面
-    ui____initial_actions0 = lv_obj_create(NULL);
-    lv_disp_load_scr(ui_Screen1);
-    lv_indev_set_group(lv_indev_get_next(NULL), Screen1group);
+    // home_screen_load();
 }
