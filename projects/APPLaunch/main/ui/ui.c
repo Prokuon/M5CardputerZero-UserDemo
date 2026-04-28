@@ -7,6 +7,7 @@
 #include "ui_helpers.h"
 #include <stdio.h>
 #include <sys/stat.h>
+#include "lvgl/lvgl.h"
 #include "hal/hal_paths.h"
 ///////////////////// VARIABLES ////////////////////
 
