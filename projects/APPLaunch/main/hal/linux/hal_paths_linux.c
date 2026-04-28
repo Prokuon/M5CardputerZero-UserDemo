@@ -2,21 +2,21 @@
 #include <stdio.h>
 #include <string.h>
 
-static char s_data_dir[512]         = "dist";
+static char s_data_dir[512]         = ".";
 static char s_applications_dir[512] = "/usr/share/APPLaunch/applications";
 static char s_store_cache_dir[512]  = "/var/cache/APPLaunch/store";
 static char s_lock_file[512]        = "/tmp/M5CardputerZero-APPLaunch_fcntl.lock";
-static char s_font_dir[512]         = "dist/images";
-static char s_font_regular[512]     = "dist/images/AlibabaPuHuiTi-3-55-Regular.ttf";
-static char s_font_mono[512]        = "dist/images/LiberationMono-Regular.ttf";
-static char s_images_dir[512]       = "dist/images";
+static char s_font_dir[512]         = "./images";
+static char s_font_regular[512]     = "./images/AlibabaPuHuiTi-3-55-Regular.ttf";
+static char s_font_mono[512]        = "./images/LiberationMono-Regular.ttf";
+static char s_images_dir[512]       = "./images";
 static const char *KBD_DEVICE       = "/dev/input/by-path/platform-3f804000.i2c-event";
 static const char *KBD_MAP          = "/usr/share/keymaps/tca8418_keypad_m5stack_keymap.map";
 static char s_store_sync_cmd[512]   = "python dist/store_cache_sync.py";
 
 void hal_paths_init(const char *exe_dir)
 {
-    if (!exe_dir) exe_dir = "dist";
+    if (!exe_dir) exe_dir = ".";
     snprintf(s_data_dir,         sizeof(s_data_dir),         "%s", exe_dir);
     snprintf(s_images_dir,       sizeof(s_images_dir),       "%s/images", exe_dir);
     snprintf(s_font_dir,         sizeof(s_font_dir),         "%s/images", exe_dir);
