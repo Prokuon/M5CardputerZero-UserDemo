@@ -6,9 +6,8 @@
 #include <iostream>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
-#include <signal.h>
 #include <unistd.h>
+#include "hal/hal_process.h"
 #include <libgen.h>
 #include <algorithm>
 #include <cctype>
@@ -92,7 +91,7 @@ private:
     int                      current_track_ = 0;
     PlayState play_state_ = PlayState::STOPPED;
     ViewState view_state_ = ViewState::MAIN;
-    pid_t player_pid_ = -1;
+    hal_pid_t player_pid_ = -1;
 
     // ==================== POSIX 路径工具 ====================
     // 父目录（基于 POSIX dirname(3)）
@@ -675,29 +674,15 @@ private:
         const std::string &file = playlist_[current_track_];
         printf("[Music] Playing: %s\n", file.c_str());
 
-        pid_t pid = fork();
-        if (pid == 0)
-        {
-            execlp("mpg123", "mpg123", "-q", file.c_str(), (char *)nullptr);
-            execlp("ffplay", "ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", file.c_str(), (char *)nullptr);
-            _exit(EXIT_FAILURE);
-        }
-        else if (pid > 0)
-        {
-            player_pid_ = pid;
-        }
-        else
-        {
-            perror("[Music] fork failed");
-        }
+        std::string cmd = std::string("mpg123 -q '") + file + "' 2>/dev/null || ffplay -nodisp -autoexit -loglevel quiet '" + file + "'";
+        player_pid_ = hal_process_spawn(cmd.c_str());
     }
 
     void stop_playback()
     {
         if (player_pid_ > 0)
         {
-            kill(player_pid_, SIGTERM);
-            waitpid(player_pid_, nullptr, WNOHANG);
+            hal_process_stop(player_pid_);
             player_pid_ = -1;
         }
     }

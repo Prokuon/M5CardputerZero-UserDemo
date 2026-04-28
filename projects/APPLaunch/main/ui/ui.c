@@ -7,6 +7,7 @@
 #include "ui_helpers.h"
 #include <stdio.h>
 #include <sys/stat.h>
+#include "hal/hal_paths.h"
 ///////////////////// VARIABLES ////////////////////
 
 
@@ -55,8 +56,8 @@ const char *ui_img_camera_png = "share/images/camera.png";
 
 
 
-const char * font_path = "/usr/share/APPLaunch/share/font/AlibabaPuHuiTi-3-55-Regular.ttf";
-const char * mono_font_path = "/usr/share/APPLaunch/share/font/LiberationMono-Regular.ttf";
+const char * font_path = NULL;
+const char * mono_font_path = NULL;
 
 
 
@@ -156,7 +157,10 @@ void start_startup_gif()
 
 void ui_init(void)
 {
-    font_manager_init(); // 先注释掉字体加载，测试UI能不能显示
+    hal_paths_init(NULL);
+    font_path = hal_path_font_regular();
+    mono_font_path = hal_path_font_mono();
+    font_manager_init();
 
     LV_EVENT_GET_COMP_CHILD = lv_event_register_id();
 

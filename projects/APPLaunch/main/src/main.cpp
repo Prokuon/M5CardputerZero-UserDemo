@@ -5,14 +5,13 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/ioctl.h>
 #include <stdio.h>
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
 #include "ui/ui.h"
 #include "keyboard_input.h"
-#include <linux/input.h>
+#include "compat/input_keys.h"
 #include <cstring>
 #include <chrono>
 // #include "ui/inter_process_comms.h"
@@ -21,7 +20,8 @@
 // #include "backward.hpp"
 // #include "backward.h"
 
-const char* lock_file = "/tmp/M5CardputerZero-APPLaunch_fcntl.lock";
+#include "hal/hal_paths.h"
+static const char* lock_file = NULL;
 
 
 static const char *getenv_default(const char *name, const char *dflt)
@@ -142,8 +142,8 @@ static void keypad_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
 static void lv_linux_indev_init(void)
 {
     const char *mouse_device = getenv_default("LV_LINUX_MOUSE_DEVICE", NULL);
-    const char *keyboard_device = getenv_default("LV_LINUX_KEYBOARD_DEVICE", "/dev/input/by-path/platform-3f804000.i2c-event");
-    const char *keyboard_map = getenv_default("LV_LINUX_KEYBOARD_MAP", "/usr/share/keymaps/tca8418_keypad_m5stack_keymap.map");
+    const char *keyboard_device = getenv_default("LV_LINUX_KEYBOARD_DEVICE", hal_path_keyboard_device());
+    const char *keyboard_map = getenv_default("LV_LINUX_KEYBOARD_MAP", hal_path_keyboard_map());
     // /home/nihao/w2T/github/m5stack-linux-dtoverlays/modules/tca8418-1.0/tca8418_keypad_m5stack_keymap.map
     setenv("APPLAUNCH_LINUX_KEYBOARD_DEVICE", keyboard_device, 1);
     setenv("APPLAUNCH_LINUX_KEYBOARD_MAP", keyboard_map, 1);
@@ -329,6 +329,8 @@ void APPLaunch_lock()
 
 int main(void)
 {
+
+    lock_file = hal_path_lock_file();
 
     lv_init();
 

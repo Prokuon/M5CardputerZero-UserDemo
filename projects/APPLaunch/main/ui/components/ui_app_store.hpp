@@ -9,8 +9,9 @@
 #include <fstream>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <linux/input.h>
+#include "compat/input_keys.h"
 #include <nlohmann/json.hpp>
+#include "hal/hal_paths.h"
 struct store_app_info
 {
     std::string name;
@@ -227,7 +228,7 @@ private:
     // ==================== app列表初始化 ====================
     // 从 /var/cache/APPLunch/store 读取缓存 JSON 文件加载 app 列表。
     // 缓存由 doc/store_cache_sync.py 生成，每个 .json 文件对应一个 store_app_info。
-    static constexpr const char *STORE_CACHE_DIR = "/var/cache/APPLunch/store";
+    const char *STORE_CACHE_DIR = hal_path_store_cache_dir();
 
     void app_list_load()
     {
@@ -654,6 +655,6 @@ private:
         lv_indev_set_group(lv_indev_get_next(NULL), console_page_->get_key_group());
 
         // 在控制台中运行缓存同步脚本
-        console_page_->exec("python /usr/share/APPLaunch/bin/store_cache_sync.py");
+        console_page_->exec(hal_path_store_sync_cmd());
     }
 };

@@ -5,9 +5,7 @@
 #include <vector>
 #include <functional>
 #include <algorithm>
-#include <ifaddrs.h>
-#include <arpa/inet.h>
-#include <net/if.h>
+#include "hal/hal_network.h"
 
 // ============================================================
 //  IP面板界面  UIIpPanelPage
@@ -56,51 +54,20 @@ private:
     {
         iface_list_.clear();
 
-        struct ifaddrs *ifas = nullptr;
-        if (getifaddrs(&ifas) != 0)
+        hal_netif_info_t entries[16];
+        int count = 0;
+        if (hal_network_list(entries, 16, &count) != 0)
             return;
 
-        // 先收集所有有 IPv4 地址的接口
-        std::unordered_map<std::string, NetIfInfo> map;
-        for (struct ifaddrs *ifa = ifas; ifa; ifa = ifa->ifa_next)
+        for (int i = 0; i < count; i++)
         {
-            if (!ifa->ifa_name) continue;
-            std::string name(ifa->ifa_name);
-
-            // 跳过 loopback
-            if (name == "lo") continue;
-
-            if (map.find(name) == map.end())
-            {
-                NetIfInfo info;
-                info.iface = name;
-                info.ip    = "N/A";
-                info.mask  = "N/A";
-                info.up    = (ifa->ifa_flags & IFF_UP) != 0;
-                map[name]  = info;
-            }
-
-            // 仅处理 IPv4
-            if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET)
-            {
-                char buf[INET_ADDRSTRLEN];
-                struct sockaddr_in *sa = (struct sockaddr_in *)ifa->ifa_addr;
-                inet_ntop(AF_INET, &sa->sin_addr, buf, sizeof(buf));
-                map[name].ip = buf;
-
-                if (ifa->ifa_netmask)
-                {
-                    struct sockaddr_in *sm = (struct sockaddr_in *)ifa->ifa_netmask;
-                    inet_ntop(AF_INET, &sm->sin_addr, buf, sizeof(buf));
-                    map[name].mask = buf;
-                }
-                map[name].up = (ifa->ifa_flags & IFF_UP) != 0;
-            }
+            NetIfInfo info;
+            info.iface = entries[i].iface;
+            info.ip    = entries[i].ipv4;
+            info.mask  = entries[i].netmask;
+            info.up    = entries[i].is_up != 0;
+            iface_list_.push_back(info);
         }
-        freeifaddrs(ifas);
-
-        for (auto &kv : map)
-            iface_list_.push_back(kv.second);
 
         // 按接口名排序，保证顺序稳定
         std::sort(iface_list_.begin(), iface_list_.end(),

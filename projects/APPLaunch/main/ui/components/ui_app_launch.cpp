@@ -2,12 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/wait.h>
 #include <fcntl.h>
-#include <linux/fb.h>
-#include <sys/ioctl.h>
 #include <dirent.h>
-#include <sys/inotify.h>
+#include "hal/hal_paths.h"
+#include "hal/hal_filesystem.h"
+#include "hal/hal_process.h"
 #include <unordered_map>
 #include <list>
 #include <memory>
@@ -90,7 +89,7 @@ class app_launch_S
 {
 private:
     int current_app = 2;
-    int inotify_fd  = -1; // inotify 实例句柄
+    hal_watcher_t dir_watcher = NULL;
     lv_timer_t *watch_timer = nullptr; // LVGL 3s 定时器
 
 public:
@@ -345,7 +344,7 @@ public:
 
     void applications_load()
     {
-        const char *app_dir = "/usr/share/APPLaunch/applications";
+        const char *app_dir = hal_path_applications_dir();
         DIR *dir = opendir(app_dir);
         if (!dir)
         {
@@ -462,21 +461,7 @@ public:
     // ============================================================
     void inotify_init_watch()
     {
-        const char *app_dir = "/usr/share/APPLaunch/applications";
-        inotify_fd = inotify_init1(IN_NONBLOCK);
-        if (inotify_fd < 0)
-        {
-            perror("inotify_init1 failed");
-            return;
-        }
-        if (inotify_add_watch(inotify_fd, app_dir,
-                              IN_CREATE | IN_DELETE | IN_MODIFY |
-                              IN_MOVED_FROM | IN_MOVED_TO | IN_CLOSE_WRITE) < 0)
-        {
-            perror("inotify_add_watch failed");
-            close(inotify_fd);
-            inotify_fd = -1;
-        }
+        dir_watcher = hal_dir_watch_start(hal_path_applications_dir());
     }
 
     // ============================================================
@@ -557,39 +542,10 @@ public:
     static void app_dir_watch_cb(lv_timer_t *timer)
     {
         auto *self = static_cast<app_launch_S *>(lv_timer_get_user_data(timer));
-        if (!self || self->inotify_fd < 0)
+        if (!self || !self->dir_watcher)
             return;
 
-        // 读取所有待处理事件（非阻塞）
-        char buf[sizeof(struct inotify_event) + NAME_MAX + 1];
-        bool changed = false;
-        for (;;)
-        {
-            ssize_t len = read(self->inotify_fd, buf, sizeof(buf));
-            if (len <= 0)
-                break; // 没有更多事件
-            // 遍历本次读取到的所有事件
-            for (char *ptr = buf; ptr < buf + len; )
-            {
-                struct inotify_event *ev = reinterpret_cast<struct inotify_event *>(ptr);
-                // 只关心 .desktop 文件相关事件
-                if (ev->len > 0)
-                {
-                    const char *fname = ev->name;
-                    size_t flen = strlen(fname);
-                    if (flen > 8 && strcmp(fname + flen - 8, ".desktop") == 0)
-                        changed = true;
-                }
-                else
-                {
-                    // 目录级别的事件（无文件名）也视为变化
-                    changed = true;
-                }
-                ptr += sizeof(struct inotify_event) + ev->len;
-            }
-        }
-
-        if (changed)
+        if (hal_dir_watch_poll(self->dir_watcher) > 0)
         {
             printf("app_dir_watch_cb: applications dir changed, reloading...\n");
             self->applications_reload();
@@ -661,10 +617,10 @@ app_launch_S::~app_launch_S()
         lv_timer_delete(watch_timer);
         watch_timer = nullptr;
     }
-    if (inotify_fd >= 0)
+    if (dir_watcher)
     {
-        close(inotify_fd);
-        inotify_fd = -1;
+        hal_dir_watch_stop(dir_watcher);
+        dir_watcher = NULL;
     }
 }
 
