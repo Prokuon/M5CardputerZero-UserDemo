@@ -282,6 +282,7 @@ endif()
 add_custom_command(TARGET cardputer-emu POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:cardputer-emu>/apps
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:UserDemo> $<TARGET_FILE_DIR:cardputer-emu>/apps/
+    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:cardputer-emu>/applications
     COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:cardputer-emu>/images
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${APPLAUNCH}/ui/images $<TARGET_FILE_DIR:cardputer-emu>/images
     COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:cardputer-emu>/assets
