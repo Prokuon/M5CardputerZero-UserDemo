@@ -14,6 +14,7 @@
 #include <vector>
 #include <keyboard_input.h>
 #include <functional>
+#include "hal/hal_settings.h"
 #define APP_CONSOLE_EXIT_EVENT (lv_event_code_t)(LV_EVENT_LAST + 1)
 
 
@@ -25,6 +26,7 @@ private:
     lv_obj_t *ui_TOP_time_Label;
     lv_obj_t *ui_TOP_Power;
     lv_obj_t *ui_TOP_power_Label;
+    lv_timer_t *status_timer_ = nullptr;
 
 public:
     lv_group_t *key_group;
@@ -41,10 +43,43 @@ public:
         creat_base_UI();
         creat_input_group();
         UI_bind_event();
+        update_status_bar();
+        status_timer_ = lv_timer_create(home_status_timer_cb, 5000, this);
     }
     ~home_base()
     {
+        if (status_timer_) lv_timer_delete(status_timer_);
         lv_obj_del(ui_root);
+    }
+
+    static void home_status_timer_cb(lv_timer_t *timer)
+    {
+        home_base *self = static_cast<home_base *>(lv_timer_get_user_data(timer));
+        if (self) self->update_status_bar();
+    }
+
+    void update_status_bar()
+    {
+        char time_buf[16];
+        hal_time_str(time_buf, sizeof(time_buf));
+        lv_label_set_text(ui_TOP_time_Label, time_buf);
+
+        hal_battery_info_t bat = hal_battery_read();
+        if (bat.valid) {
+            int soc = bat.soc;
+            if (soc > 100) soc = 100;
+            if (soc < 0) soc = 0;
+            lv_bar_set_value(ui_TOP_Power, soc, LV_ANIM_ON);
+            char pwr_buf[16];
+            snprintf(pwr_buf, sizeof(pwr_buf), "%d%%", soc);
+            lv_label_set_text(ui_TOP_power_Label, pwr_buf);
+
+            uint32_t color = 0x66CC33;
+            if (soc <= 20) color = 0xE74C3C;
+            else if (soc <= 50) color = 0xF39C12;
+            lv_obj_set_style_bg_color(ui_TOP_Power, lv_color_hex(color),
+                                      LV_PART_INDICATOR | LV_STATE_DEFAULT);
+        }
     }
 
 private:
@@ -144,6 +179,7 @@ private:
     lv_obj_t *ui_TOP_SignalStrength_four;
     lv_obj_t *ui_TOP_Power;
     lv_obj_t *ui_TOP_power_Label;
+    lv_timer_t *status_timer_ = nullptr;
 
 public:
     lv_group_t *key_group;
@@ -159,11 +195,49 @@ public:
         creat_base_UI();
         creat_input_group();
         UI_bind_event();
+        update_status_bar();
+        status_timer_ = lv_timer_create(app_status_timer_cb, 5000, this);
     }
     ~app_base()
     {
+        if (status_timer_) lv_timer_delete(status_timer_);
         lv_obj_del(ui_root);
-        // lv_obj_del_async(ui_root);
+    }
+
+    static void app_status_timer_cb(lv_timer_t *timer)
+    {
+        app_base *self = static_cast<app_base *>(lv_timer_get_user_data(timer));
+        if (self) self->update_status_bar();
+    }
+
+    void update_status_bar()
+    {
+        char time_buf[16];
+        hal_time_str(time_buf, sizeof(time_buf));
+        lv_label_set_text(ui_TOP_time_Label, time_buf);
+
+        hal_battery_info_t bat = hal_battery_read();
+        if (bat.valid) {
+            int soc = bat.soc;
+            if (soc > 100) soc = 100;
+            if (soc < 0) soc = 0;
+            char pwr_buf[16];
+            snprintf(pwr_buf, sizeof(pwr_buf), "%d%%", soc);
+            lv_label_set_text(ui_TOP_power_Label, pwr_buf);
+        }
+
+        hal_wifi_status_t ws = hal_wifi_get_status();
+        int sig = ws.connected ? ws.signal : 0;
+        uint32_t on_color  = 0x00CCFF;
+        uint32_t off_color = 0x4D4D4D;
+        lv_obj_set_style_bg_color(ui_TOP_SignalStrength_one,
+            lv_color_hex(sig > 0 ? on_color : off_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(ui_TOP_SignalStrength_two,
+            lv_color_hex(sig >= 30 ? on_color : off_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(ui_TOP_SignalStrength_three,
+            lv_color_hex(sig >= 60 ? on_color : off_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(ui_TOP_SignalStrength_four,
+            lv_color_hex(sig >= 80 ? on_color : off_color), LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
 private:
