@@ -22,6 +22,15 @@
 #include "ui_app_console.hpp"
 #include "ui_app_IpPanel.hpp"
 #include "ui_app_stock.hpp"
+#include "ui_app_chat.hpp"
+#include "ui_app_email.hpp"
+#include "ui_app_file.hpp"
+#include "ui_app_ssh.hpp"
+#include "ui_app_hack.hpp"
+#include "ui_app_mesh.hpp"
+#include "ui_app_rec.hpp"
+#include "ui_app_camera.hpp"
+#include "ui_app_game.hpp"
 
 static inline std::string img_path(const char *name)
 {
@@ -166,6 +175,24 @@ public:
         app_list.emplace_back("STOCKS",
                               img_path("stocks_macos_bigsur_icon_189691.png"), page_v<UIStockPage>);
 
+        app_list.emplace_back("CHAT",
+                              img_path("chat.png"), page_v<UIchatPage>);
+        app_list.emplace_back("e-Mail",
+                              img_path("email.png"), page_v<UIEmailPage>);
+        app_list.emplace_back("FILE",
+                              img_path("CLI_logo.png"), page_v<UIFilePage>);
+        app_list.emplace_back("SSH",
+                              img_path("ssh.png"), page_v<UISSHPage>);
+        app_list.emplace_back("HACK",
+                              img_path("hack.png"), page_v<UIHackPage>);
+        app_list.emplace_back("MESH",
+                              img_path("mesh.png"), page_v<UIMeshPage>);
+        app_list.emplace_back("REC",
+                              img_path("rec.png"), page_v<UIRecPage>);
+        app_list.emplace_back("CAMERA",
+                              img_path("camera.png"), page_v<UICameraPage>);
+        app_list.emplace_back("GAME",
+                              img_path("gmae.png"), page_v<UIGamePage>);
 
         applications_load();
 
@@ -439,9 +466,9 @@ public:
     // ============================================================
     void applications_reload()
     {
-        // 固定条目数量（Python/STORE/CLI/CLAW/SETTING/MUSIC/AUDIO_PLAYER/IP_PANEL/MATH/STOCKS）
-        // 即构造函数中 applications_load() 之前加入的条目
-        const int fixed_count = 10;
+        // 固定条目数量（Python/STORE/CLI/CLAW/SETTING/MUSIC/AUDIO_PLAYER/IP_PANEL/MATH/STOCKS
+        // + CHAT/e-Mail/FILE/SSH/HACK/MESH/REC/CAMERA/GAME）
+        const int fixed_count = 19;
         int sz = (int)app_list.size();
         if (sz > fixed_count)
         {
