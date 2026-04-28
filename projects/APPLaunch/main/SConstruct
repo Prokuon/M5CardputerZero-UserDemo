@@ -43,7 +43,7 @@ for src in lvgl_component['SRCS']:
 
 
 STATIC_FILES += [ADir('ui/images')]
-
+STATIC_FILES += [os.path.join(env['component_dir'], '..', '..', '..', 'doc', 'store_cache_sync.py')]
 # REQUIREMENTS += ['Backward_cpp']
 
 

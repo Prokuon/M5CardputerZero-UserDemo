@@ -99,6 +99,13 @@ def create_applaunch_deb(version='0.1', src_folder='../dist', revision='m5stack1
     else:
         print(f'  [warn] no *.ttf found under {src_folder}')
 
+    py_files = glob.glob(os.path.join(src_folder, '**', '*.py'), recursive=True)
+    if py_files:
+        for f in py_files:
+            shutil.copy2(f, os.path.join(deb_folder, BIN_PATH))
+    else:
+        print(f'  [warn] no *.py found under {src_folder}')
+
     # ------------------------------------------------------- share/images/  (recursive *.png under src_folder)
     png_files = glob.glob(os.path.join(src_folder, '**', '*.png'), recursive=True)
     png_files += glob.glob(os.path.join(src_folder, '**', '*.gif'), recursive=True)
@@ -134,6 +141,8 @@ def create_applaunch_deb(version='0.1', src_folder='../dist', revision='m5stack1
     # ------------------------------------------------------- DEBIAN/postinst
     with open(os.path.join(deb_folder, 'DEBIAN', 'postinst'), 'w') as f:
         f.write('#!/bin/sh\n')
+        f.write(f'mkdir -p /var/cache/APPLunch\n')
+        f.write(f'ln -s /var/cache/APPLunch /usr/share/APPLaunch/cache\n')
         f.write(f'[ -f "/lib/systemd/system/{APP_NAME}.service" ] && systemctl enable {APP_NAME}.service\n')
         f.write(f'[ -f "/lib/systemd/system/{APP_NAME}.service" ] && systemctl start {APP_NAME}.service\n')
         f.write('exit 0\n')
@@ -143,6 +152,7 @@ def create_applaunch_deb(version='0.1', src_folder='../dist', revision='m5stack1
         f.write('#!/bin/sh\n')
         f.write(f'[ -f "/lib/systemd/system/{APP_NAME}.service" ] && systemctl stop {APP_NAME}.service\n')
         f.write(f'[ -f "/lib/systemd/system/{APP_NAME}.service" ] && systemctl disable {APP_NAME}.service\n')
+        f.write(f'rm -rf /var/cache/APPLunch\n')
         f.write('exit 0\n')
 
     # ------------------------------------------------------- lib/systemd/system/APPLaunch.service

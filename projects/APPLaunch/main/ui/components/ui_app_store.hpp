@@ -1,11 +1,16 @@
 #pragma once
 #include "ui_app_page.hpp"
+#include "ui_app_console.hpp"
 #include <unordered_map>
 #include <string>
 #include <list>
 #include <set>
 #include <iostream>
+#include <fstream>
+#include <dirent.h>
+#include <sys/stat.h>
 #include <linux/input.h>
+#include <nlohmann/json.hpp>
 struct store_app_info
 {
     std::string name;
@@ -28,6 +33,9 @@ public:
     std::list<std::list<store_app_info>::const_iterator>::const_iterator current_app; // 当前选中的app
 
     bool in_detail_view_ = false; // 是否在详情面板模式
+
+    // F5刷新时启动的控制台页面
+    std::shared_ptr<UIConsolePage> console_page_;
 
 public:
     UIStorePage() : app_base()
@@ -217,23 +225,92 @@ private:
     }
 
     // ==================== app列表初始化 ====================
+    // 从 /var/cache/APPLunch/store 读取缓存 JSON 文件加载 app 列表。
+    // 缓存由 doc/store_cache_sync.py 生成，每个 .json 文件对应一个 store_app_info。
+    static constexpr const char *STORE_CACHE_DIR = "/var/cache/APPLunch/store";
+
     void app_list_load()
     {
-        app_list.push_back(store_app_info{"Camera", "v0.1", "A:/dist/images/camera.png", "TOOLS", "camera"});
-        app_list.push_back(store_app_info{"Chat", "v0.1", "A:/dist/images/chat.png", "TOOLS", "chat"});
-        app_list.push_back(store_app_info{"Claw", "v0.1", "A:/dist/images/claw.png", "TOOLS", "claw"});
-        app_list.push_back(store_app_info{"Cli", "v0.1", "A:/dist/images/CLI.png", "TOOLS", "cli"});
-        app_list.push_back(store_app_info{"Email", "v0.1", "A:/dist/images/email.png", "TOOLS", "email"});
-        app_list.push_back(store_app_info{"Gmage", "v0.1", "A:/dist/images/gmae.png", "GMAGE", "gmage"});
-        app_list.push_back(store_app_info{"Hack", "v0.1", "A:/dist/images/hack.png", "HACK", "hack"});
-        app_list.push_back(store_app_info{"Math", "v0.1", "A:/dist/images/math.png", "TOOLS", "math"});
-        app_list.push_back(store_app_info{"Mesh", "v0.1", "A:/dist/images/mesh.png", "TOOLS", "mesh"});
-        app_list.push_back(store_app_info{"Music", "v0.1", "A:/dist/images/music.png", "GMAGE", "music"});
-        app_list.push_back(store_app_info{"Python", "v0.1", "A:/dist/images/python.png", "TOOLS", "python"});
-        app_list.push_back(store_app_info{"Rec", "v0.1", "A:/dist/images/rec.png", "TOOLS", "rec"});
-        app_list.push_back(store_app_info{"Setting", "v0.1", "A:/dist/images/setting.png", "TOOLS", "setting"});
-        app_list.push_back(store_app_info{"SSH", "v0.1", "A:/dist/images/ssh.png", "TOOLS", "ssh"});
+        // ── 尝试从缓存目录加载 ───────────────────────────────────────────
+        bool loaded_from_cache = false;
 
+        DIR *dir = opendir(STORE_CACHE_DIR);
+        if (dir)
+        {
+            struct dirent *ent = nullptr;
+            while ((ent = readdir(dir)) != nullptr)
+            {
+                if (ent->d_type != DT_REG) continue; // 只处理普通文件
+
+                std::string fname(ent->d_name);
+                // 仅处理 .json 后缀的文件
+                if (fname.size() < 5 || fname.substr(fname.size() - 5) != ".json")
+                    continue;
+
+                std::string full_path = std::string(STORE_CACHE_DIR) + "/" + fname;
+                std::ifstream ifs(full_path);
+                if (!ifs.is_open())
+                {
+                    std::cerr << "[store] 无法打开: " << full_path << "\n";
+                    continue;
+                }
+
+                try
+                {
+                    nlohmann::json j;
+                    ifs >> j;
+
+                    store_app_info info;
+                    info.name        = j.value("name",        "");
+                    info.version     = j.value("version",     "");
+                    info.logo_icon   = j.value("logo_icon",   "");
+                    info.class_name  = j.value("class_name",  "");
+                    info.description = j.value("description", "");
+                    info.url         = j.value("url",         "");
+
+                    if (info.name.empty())
+                    {
+                        std::cerr << "[store] 跳过空 name 的条目: " << full_path << "\n";
+                        continue;
+                    }
+
+                    app_list.push_back(std::move(info));
+                    loaded_from_cache = true;
+                }
+                catch (const nlohmann::json::exception &ex)
+                {
+                    std::cerr << "[store] JSON 解析错误 " << full_path << ": " << ex.what() << "\n";
+                }
+            }
+            closedir(dir);
+        }
+        else
+        {
+            std::cerr << "[store] 缓存目录不存在: " << STORE_CACHE_DIR
+                      << "，请先运行 doc/store_cache_sync.py\n";
+        }
+
+        // ── 若缓存为空则使用内置默认列表 ────────────────────────────────
+        if (!loaded_from_cache)
+        {
+            std::cerr << "[store] 未加载到缓存，使用内置默认 app 列表\n";
+            app_list.push_back(store_app_info{"Camera", "v0.1", "A:/dist/images/camera.png", "TOOLS", "camera"});
+            app_list.push_back(store_app_info{"Chat", "v0.1", "A:/dist/images/chat.png", "TOOLS", "chat"});
+            app_list.push_back(store_app_info{"Claw", "v0.1", "A:/dist/images/claw.png", "TOOLS", "claw"});
+            app_list.push_back(store_app_info{"Cli", "v0.1", "A:/dist/images/CLI.png", "TOOLS", "cli"});
+            app_list.push_back(store_app_info{"Email", "v0.1", "A:/dist/images/email.png", "TOOLS", "email"});
+            app_list.push_back(store_app_info{"Gmage", "v0.1", "A:/dist/images/gmae.png", "GMAGE", "gmage"});
+            app_list.push_back(store_app_info{"Hack", "v0.1", "A:/dist/images/hack.png", "HACK", "hack"});
+            app_list.push_back(store_app_info{"Math", "v0.1", "A:/dist/images/math.png", "TOOLS", "math"});
+            app_list.push_back(store_app_info{"Mesh", "v0.1", "A:/dist/images/mesh.png", "TOOLS", "mesh"});
+            app_list.push_back(store_app_info{"Music", "v0.1", "A:/dist/images/music.png", "GMAGE", "music"});
+            app_list.push_back(store_app_info{"Python", "v0.1", "A:/dist/images/python.png", "TOOLS", "python"});
+            app_list.push_back(store_app_info{"Rec", "v0.1", "A:/dist/images/rec.png", "TOOLS", "rec"});
+            app_list.push_back(store_app_info{"Setting", "v0.1", "A:/dist/images/setting.png", "TOOLS", "setting"});
+            app_list.push_back(store_app_info{"SSH", "v0.1", "A:/dist/images/ssh.png", "TOOLS", "ssh"});
+        }
+
+        // ── 建立分类集合 & 初始化当前分类迭代器 ─────────────────────────
         for (const auto &app : app_list)
         {
             class_name_list.insert(app.class_name);
@@ -537,6 +614,9 @@ private:
             case KEY_ENTER:
                 /* code */
                 break;
+            case KEY_F5:
+                start_store_refresh();
+                break;
             case KEY_ESC:
                 go_back_home();
                 break;
@@ -544,5 +624,36 @@ private:
                 break;
             }
         }
+    }
+
+    // ==================== F5刷新：通过控制台运行同步脚本，结束后重新加载 ====================
+    void start_store_refresh()
+    {
+        // 创建控制台页面
+        console_page_ = std::make_shared<UIConsolePage>();
+        console_page_->terminal_sysplause = false;
+        // 控制台退出时：销毁控制台、重新加载数据并切换回本页面
+        console_page_->go_back_home = [this]() {
+            // 销毁控制台页面
+            console_page_.reset();
+
+            // 重新加载 app 列表数据
+            app_list.clear();
+            class_name_list.clear();
+            current_list.clear();
+            app_list_load();
+
+            // 切换回 store 画面并更新 UI
+            lv_disp_load_scr(this->ui_root);
+            lv_indev_set_group(lv_indev_get_next(NULL), this->key_group);
+            update_ui();
+        };
+
+        // 切换到控制台画面
+        lv_disp_load_scr(console_page_->get_ui());
+        lv_indev_set_group(lv_indev_get_next(NULL), console_page_->get_key_group());
+
+        // 在控制台中运行缓存同步脚本
+        console_page_->exec("python /usr/share/APPLaunch/bin/store_cache_sync.py");
     }
 };
