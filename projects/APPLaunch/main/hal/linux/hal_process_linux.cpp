@@ -76,3 +76,22 @@ void hal_process_kill(int pid, int grace_ms)
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 }
+
+hal_pid_t hal_process_spawn(const char *exec_path)
+{
+    pid_t pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        execlp("/bin/sh", "sh", "-c", exec_path, (char *)NULL);
+        _exit(127);
+    }
+    return (hal_pid_t)pid;
+}
+
+void hal_process_stop(hal_pid_t pid)
+{
+    if (pid <= 0) return;
+    kill((pid_t)pid, SIGTERM);
+    int status;
+    waitpid((pid_t)pid, &status, WNOHANG);
+}
