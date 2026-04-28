@@ -23,6 +23,11 @@
 #include "ui_app_IpPanel.hpp"
 #include "ui_app_stock.hpp"
 
+static inline std::string img_path(const char *name)
+{
+    return std::string(hal_path_images_dir()) + "/" + name;
+}
+
 // ============================================================
 // 启动快捷方式示例
 // ============================================================
@@ -101,15 +106,15 @@ public:
     {
         // 固定图标，不允许用户修改
         app_list.emplace_back("Python",
-                              "share/images/PYTHON_logo.png", "python3", true, false);
+                              img_path("PYTHON_logo.png"), "python3", true, false);
         app_list.emplace_back("STORE",
-                              "share/images/Store_logo.png", page_v<UIStorePage>);
+                              img_path("Store_logo.png"), page_v<UIStorePage>);
         app_list.emplace_back("CLI",
-                              "share/images/CLI_logo.png", "bash", true, false);
+                              img_path("CLI_logo.png"), "bash", true, false);
         app_list.emplace_back("CLAW",
-                              "share/images/CLAW_logo.png", "/home/pi/zeroclaw agent", true);
+                              img_path("CLAW_logo.png"), "/home/pi/zeroclaw agent", true);
         app_list.emplace_back("SETTING",
-                              "share/images/SETTING_logo.png", page_v<UISetupPage>);
+                              img_path("SETTING_logo.png"), page_v<UISetupPage>);
 
         {
             auto it = std::next(app_list.begin(), 0);
@@ -145,21 +150,21 @@ public:
 
         // 动态图标，允许用户自定义
         app_list.emplace_back("MUSIC",
-                              "share/images/MUSIC_logo.png", page_v<UIMusicPage>);
+                              img_path("MUSIC_logo.png"), page_v<UIMusicPage>);
         app_list.emplace_back("AUDIO_PLAYER",
-                              "share/images/MUSIC_logo.png",
+                              img_path("MUSIC_logo.png"),
                               "tinyplay -D1 -d0 /home/pi/zhou.wav",
                               true);
         app_list.emplace_back("IP_PANEL",
-                              "share/images/ssh.png", page_v<UIIpPanelPage>);
+                              img_path("ssh.png"), page_v<UIIpPanelPage>);
 
         app_list.emplace_back("MATH",
-                              "share/images/math.png", 
+                              img_path("math.png"), 
                               "/home/pi/M5CardputerZero-Calculator-linux-aarch64", false);
 
 
         app_list.emplace_back("STOCKS",
-                              "share/images/stocks_macos_bigsur_icon_189691.png", page_v<UIStockPage>);
+                              img_path("stocks_macos_bigsur_icon_189691.png"), page_v<UIStockPage>);
 
 
         applications_load();

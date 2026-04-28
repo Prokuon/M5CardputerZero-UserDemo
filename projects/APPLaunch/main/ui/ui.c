@@ -29,28 +29,48 @@ lv_obj_t * startup_gif;
 
 // CUSTOM VARIABLES
 int Animation_time = 200;
-const char *ui_img_zero_png = "share/images/zero.png";
-const char *ui_img_time_png = "share/images/time.png";
-const char *ui_img_zuo_png = "share/images/zuo.png";
-const char *ui_img_you_png = "share/images/you.png";
+const char *ui_img_zero_png;
+const char *ui_img_time_png;
+const char *ui_img_zuo_png;
+const char *ui_img_you_png;
 
-
-
-const char *ui_img_store_logo_png ;
+const char *ui_img_store_logo_png;
 const char *ui_img_cli_logo_png;
-const char *ui_img_claw_logo_png ;
-const char *ui_img_setting_logo_png ;
-const char *ui_img_python_logo_png ;
+const char *ui_img_claw_logo_png;
+const char *ui_img_setting_logo_png;
+const char *ui_img_python_logo_png;
 
+const char *ui_img_zero_logo_w_png;
+const char *ui_img_zuo_logo_png;
+const char *ui_img_you_logo_png;
+const char *ui_img_detail_info_png;
+const char *ui_img_down_logo_png;
+const char *ui_img_up_logo_png;
+const char *ui_img_camera_png;
 
-
-const char *ui_img_zero_logo_w_png = "share/images/zero_logo_w.png";
-const char *ui_img_zuo_logo_png = "share/images/zuo_logo.png";
-const char *ui_img_you_logo_png = "share/images/you_logo.png";
-const char *ui_img_detail_info_png = "share/images/detail_info.png";
-const char *ui_img_down_logo_png = "share/images/down_logo.png";
-const char *ui_img_up_logo_png = "share/images/up_logo.png";
-const char *ui_img_camera_png = "share/images/camera.png";
+static char _img_path_buf[16][256];
+static void ui_images_init(void)
+{
+    const char *d = hal_path_images_dir();
+    struct { const char **ptr; const char *name; } tbl[] = {
+        { &ui_img_zero_png,       "zero.png" },
+        { &ui_img_time_png,       "time.png" },
+        { &ui_img_zuo_png,        "zuo.png" },
+        { &ui_img_you_png,        "you.png" },
+        { &ui_img_zero_logo_w_png,"zero_logo_w.png" },
+        { &ui_img_zuo_logo_png,   "zuo_logo.png" },
+        { &ui_img_you_logo_png,   "you_logo.png" },
+        { &ui_img_detail_info_png,"detail_info.png" },
+        { &ui_img_down_logo_png,  "down_logo.png" },
+        { &ui_img_up_logo_png,    "up_logo.png" },
+        { &ui_img_camera_png,     "camera.png" },
+    };
+    int n = sizeof(tbl) / sizeof(tbl[0]);
+    for (int i = 0; i < n && i < 16; i++) {
+        snprintf(_img_path_buf[i], sizeof(_img_path_buf[i]), "%s/%s", d, tbl[i].name);
+        *tbl[i].ptr = _img_path_buf[i];
+    }
+}
 
 
 
@@ -150,10 +170,12 @@ void ui_event_logo_over(lv_event_t * e) {
     } 
 }
 
+static char _gif_path[256];
 void start_startup_gif()
 {
+    snprintf(_gif_path, sizeof(_gif_path), "%s/logo_output.gif", hal_path_images_dir());
     startup_gif = lv_gif_create(NULL);
-    lv_gif_set_src(startup_gif, "share/images/logo_output.gif");
+    lv_gif_set_src(startup_gif, _gif_path);
     lv_obj_center(startup_gif);
     lv_obj_add_event_cb(startup_gif, ui_event_logo_over, LV_EVENT_ALL, NULL);
     lv_disp_load_scr(startup_gif);
@@ -162,6 +184,7 @@ void start_startup_gif()
 void ui_init(void)
 {
     hal_paths_init(NULL);
+    ui_images_init();
     font_path = hal_path_font_regular();
     mono_font_path = hal_path_font_mono();
     font_manager_init();
@@ -183,9 +206,12 @@ void ui_init(void)
     // 初始化输入组
     input_group_init();
 
-    // 显示开机动画
-    start_startup_gif();
-
-    // 显示 home 界面
-    // home_screen_load();
+    // 显示开机动画（需要 share/images/logo_output.gif，SDL 模式下可能缺失）
+    {
+        char gif_check[256];
+        snprintf(gif_check, sizeof(gif_check), "%s/logo_output.gif", hal_path_images_dir());
+        FILE *_gif_f = fopen(gif_check, "r");
+        if (_gif_f) { fclose(_gif_f); start_startup_gif(); }
+        else { home_screen_load(); }
+    }
 }
