@@ -10,7 +10,6 @@
 #include <string>
 #include <stdint.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <errno.h>
 #include <vector>
 #include <keyboard_input.h>

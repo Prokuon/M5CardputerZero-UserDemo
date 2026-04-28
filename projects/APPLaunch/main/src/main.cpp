@@ -5,15 +5,13 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <signal.h>
 #include <string.h>
-#include <unistd.h>
+#include <cstring>
+#include <chrono>
 #include "ui/ui.h"
 #include "keyboard_input.h"
 #include "compat/input_keys.h"
-#include <cstring>
-#include <chrono>
+#include "hal/hal_process.h"
 // #include "ui/inter_process_comms.h"
 
 // #define BACKWARD_HAS_DW 1
@@ -240,90 +238,37 @@ static void lv_linux_indev_init(void)
 
 void APPLaunch_lock()
 {
-    static std::chrono::time_point<std::chrono::steady_clock> start_time;
-    static std::chrono::time_point<std::chrono::steady_clock> end_time;
     static int home_back_status = 0;
+    static std::chrono::time_point<std::chrono::steady_clock> start_time;
 
-    int fd = open(lock_file, O_CREAT | O_RDWR, 0666);
-    if (fd == -1) {
-        perror("open failed");
-        return ;
-    }
+    int holder_pid = 0;
+    hal_process_check_lock(lock_file, &holder_pid);
 
-    struct flock fl;
-    memset(&fl, 0, sizeof(fl));
-
-    /*
-     * 查询：如果当前进程想加一把写锁，会不会被阻塞？
-     */
-    fl.l_type = F_WRLCK;      // 查询写锁冲突
-    fl.l_whence = SEEK_SET;
-    fl.l_start = 0;
-    fl.l_len = 0;             // 0 表示整个文件
-
-    /*
-     * F_GETLK：只查询锁，不会加锁
-     */
-    if (fcntl(fd, F_GETLK, &fl) == -1) {
-        perror("fcntl F_GETLK failed");
-        close(fd);
-        return ;
-    }
     static int lvgl_lock = 0;
-    if (fl.l_type == F_UNLCK) {
-        // printf("lock is not held by another process\n");
-        if(lvgl_lock == 1)
-        {
+    if (holder_pid == 0) {
+        if (lvgl_lock == 1) {
             LVGL_RUN_FLAGE = 1;
             lvgl_lock = 0;
             lv_obj_invalidate(lv_scr_act());
         }
-        
     } else {
-        // printf("lock is held by another process\n");
-        // printf("lock type: %s\n", fl.l_type == F_WRLCK ? "write lock" : "read lock");
-        // printf("lock holder pid: %d\n", fl.l_pid);
-        {
-            if(LVGL_HOME_KEY_FLAGE)
-            {
-                if(home_back_status == 0)
-                {
-                    home_back_status = 1;
-                    start_time = std::chrono::steady_clock::now();
-                }
-                if(home_back_status == 1)
-                {
-                    end_time = std::chrono::steady_clock::now();
-                    if(std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count() >= 5)
-                    {
-                        home_back_status = 2;
-                        start_time = std::chrono::steady_clock::now();
-                    }
-                }
-                if(home_back_status == 2)
-                {
-                    kill(fl.l_pid, SIGINT);
-                    end_time = std::chrono::steady_clock::now();
-                    if(std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count() >= 3)
-                    {
-                        home_back_status = 4;
-                    }
-                }
-                if(home_back_status == 4)
-                {
-                    kill(fl.l_pid, SIGKILL);
-                }
+        if (LVGL_HOME_KEY_FLAGE) {
+            if (home_back_status == 0) {
+                home_back_status = 1;
+                start_time = std::chrono::steady_clock::now();
             }
-            else
-            {
+            auto elapsed = std::chrono::steady_clock::now() - start_time;
+            auto secs = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+            if (secs >= 5) {
+                hal_process_kill(holder_pid, 3000);
                 home_back_status = 0;
             }
+        } else {
+            home_back_status = 0;
         }
         lvgl_lock = 1;
         LVGL_RUN_FLAGE = 0;
     }
-
-    close(fd);
 }
 
 

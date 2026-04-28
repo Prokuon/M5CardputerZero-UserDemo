@@ -217,103 +217,14 @@ public:
         lv_timer_enable(false);
         lv_refr_now(disp);
 
-        pid_t pid = fork();
-        if (pid == 0)
-        {
-            execlp(exec.c_str(), exec.c_str(), (char *)NULL);
-            perror("execlp failed");
-            _exit(EXIT_FAILURE);
-        }
-        else if (pid > 0)
-        {
-            pid_t pid_ret;
-            int status;
-            int end_status = 0;
-            std::chrono::time_point<std::chrono::steady_clock> start_time;
-            std::chrono::time_point<std::chrono::steady_clock> end_time;
-            int ctrl_c_count = 0;
-            for(;;)
-            {
-                if(end_status == 0)
-                {
-                    pid_ret = waitpid(pid, &status, WNOHANG);
-                    if (pid_ret > 0)
-                        break;
-                    usleep(100000); // 100ms
-                    if(LVGL_HOME_KEY_FLAGE)
-                    {
-                        end_status = 1;
-                        start_time = std::chrono::steady_clock::now();
-                    }
-                }
-                if(end_status == 1)
-                {
-                    if(LVGL_HOME_KEY_FLAGE)
-                    {
-                        end_time = std::chrono::steady_clock::now();
-                        if(std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count() >= 5)
-                        {
-                            // kill(pid, SIGINT);
-                            end_status = 2;
-                        }
-                    }
-                    else
-                    {
-                        end_status = 0;
-                    }
-                }
-                if(end_status == 2)
-                {
-                    ctrl_c_count ++;
-                    kill(pid, SIGINT);
-                    usleep(100000); // 100ms
-                    pid_ret = waitpid(pid, &status, WNOHANG);
-                    if (pid_ret > 0)
-                        break;
-                    if(ctrl_c_count >= 30)
-                    {
-                        // kill(pid, SIGKILL);
-                        end_status = 3;
-                        ctrl_c_count = 0 ;
-                    }
-                }
-                if(end_status == 3)
-                {
-                    ctrl_c_count ++;
-                    kill(pid, SIGKILL);
-                    usleep(100000); // 100ms
-                    pid_ret = waitpid(pid, &status, WNOHANG);
-                    if (pid_ret > 0)
-                        break;
-                    if (pid_ret < 0)
-                        break;
-                    if(ctrl_c_count >= 300)
-                    {
-                        break;
-                    }
-                }
-            }
-            
-            // waitpid(pid, &status, 0);
-            if (WIFEXITED(status)) {
-                printf("App %s exited normally, code=%d\n", exec.c_str(), WEXITSTATUS(status));
-            } else if (WIFSIGNALED(status)) {
-                printf("App %s killed by signal %d\n", exec.c_str(), WTERMSIG(status));
-            }
-            lv_timer_enable(true);
-            if (indev)
-                lv_indev_set_group(indev, Screen1group);
-            lv_disp_load_scr(ui_Screen1);
-            lv_obj_invalidate(lv_screen_active());
-            lv_refr_now(disp);
-        }
-        else
-        {
-            perror("fork failed");
-            lv_timer_enable(true);
-            if (indev)
-                lv_indev_set_group(indev, lv_group_get_default());
-        }
+        int ret = hal_process_exec_blocking(exec.c_str(), &LVGL_HOME_KEY_FLAGE);
+        printf("App %s exited with code %d\n", exec.c_str(), ret);
+        lv_timer_enable(true);
+        if (indev)
+            lv_indev_set_group(indev, Screen1group);
+        lv_disp_load_scr(ui_Screen1);
+        lv_obj_invalidate(lv_screen_active());
+        lv_refr_now(disp);
         LVGL_RUN_FLAGE = 1;
     }
 
