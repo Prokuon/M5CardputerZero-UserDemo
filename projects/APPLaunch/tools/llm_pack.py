@@ -141,8 +141,8 @@ def create_applaunch_deb(version='0.1', src_folder='../dist', revision='m5stack1
     # ------------------------------------------------------- DEBIAN/postinst
     with open(os.path.join(deb_folder, 'DEBIAN', 'postinst'), 'w') as f:
         f.write('#!/bin/sh\n')
-        f.write(f'mkdir -p /var/cache/APPLunch\n')
-        f.write(f'ln -s /var/cache/APPLunch /usr/share/APPLaunch/cache\n')
+        f.write(f'mkdir -p /var/cache/APPLaunch\n')
+        f.write(f'ln -s /var/cache/APPLaunch /usr/share/APPLaunch/cache\n')
         f.write(f'[ -f "/lib/systemd/system/{APP_NAME}.service" ] && systemctl enable {APP_NAME}.service\n')
         f.write(f'[ -f "/lib/systemd/system/{APP_NAME}.service" ] && systemctl start {APP_NAME}.service\n')
         f.write('exit 0\n')
@@ -152,7 +152,7 @@ def create_applaunch_deb(version='0.1', src_folder='../dist', revision='m5stack1
         f.write('#!/bin/sh\n')
         f.write(f'[ -f "/lib/systemd/system/{APP_NAME}.service" ] && systemctl stop {APP_NAME}.service\n')
         f.write(f'[ -f "/lib/systemd/system/{APP_NAME}.service" ] && systemctl disable {APP_NAME}.service\n')
-        f.write(f'rm -rf /var/cache/APPLunch\n')
+        f.write(f'rm -rf /var/cache/APPLaunch\n')
         f.write('exit 0\n')
 
     # ------------------------------------------------------- lib/systemd/system/APPLaunch.service
