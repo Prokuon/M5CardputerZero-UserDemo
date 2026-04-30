@@ -229,7 +229,7 @@ void switchyou(lv_event_t *e)
     ROTATE_RIGHT(launch_circle, 5, 9);
 
     switchpanleEnable(switch_current_pos, 0);
-    switch_current_pos = switch_current_pos == 17 ? 10 : switch_current_pos + 1;
+    switch_current_pos = switch_current_pos == 10 ? 17 : switch_current_pos - 1;
     switchpanleEnable(switch_current_pos, 1);
 }
 
@@ -279,7 +279,7 @@ void switchzuo(lv_event_t *e)
     ROTATE_LEFT(launch_circle, 5, 9);
 
     switchpanleEnable(switch_current_pos, 0);
-    switch_current_pos = switch_current_pos == 10 ? 17 : switch_current_pos - 1;
+    switch_current_pos = switch_current_pos == 17 ? 10 : switch_current_pos + 1;
     switchpanleEnable(switch_current_pos, 1);
 }
 
