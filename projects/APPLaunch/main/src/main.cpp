@@ -116,7 +116,9 @@ static void keypad_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
             elm = STAILQ_FIRST(&keyboard_queue);
             STAILQ_REMOVE_HEAD(&keyboard_queue, entries);
 
-            printf("Read key event from queue: code=%u state=%u\n", elm->key_code, elm->key_state);
+            printf("[INDEV] dequeue code=%u state=%s sym=%s active_screen=%p\n",
+                   elm->key_code, kbd_state_name(elm->key_state),
+                   elm->sym_name, (void*)lv_screen_active());
             lv_obj_t *root = lv_screen_active();
             if (root) {
                 lv_obj_send_event(root, (lv_event_code_t)LV_EVENT_KEYBOARD, elm);
@@ -285,10 +287,8 @@ int main(void)
     lv_linux_indev_init();
 
     LV_EVENT_KEYBOARD = lv_event_register_id();
-    /*Create a Demo*/
-    // lv_demo_widgets();
-    // lv_demo_widgets_start_slideshow();
-    // lv_demo_music();
+
+    kbd_dump_keymap_table();
 
     ui_init();
     // lv_demo_widgets(); // 用LVGL自带demo测试

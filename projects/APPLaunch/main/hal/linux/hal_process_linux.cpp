@@ -124,14 +124,21 @@ int hal_process_exec_blocking(const char *exec_path, volatile int *home_key_flag
 
         struct input_event ev;
         while (read(evfd, &ev, sizeof(ev)) == (ssize_t)sizeof(ev)) {
+            if (ev.type == EV_KEY) {
+                const char *st = (ev.value == 1) ? "DOWN" :
+                                 (ev.value == 0) ? "UP"   :
+                                 (ev.value == 2) ? "REPEAT" : "???";
+                printf("[HAL-EXT] evdev code=%u value=%d(%s) (to child via uinput)\n",
+                       ev.code, ev.value, st);
+            }
             if (ev.type == EV_KEY && ev.code == KEY_ESC) {
                 if (ev.value == 1) {
                     esc_down = true;
                     esc_down_since = std::chrono::steady_clock::now();
-                    printf("[hal] ESC DOWN\n");
+                    printf("[HAL-EXT] ESC DOWN\n");
                 } else if (ev.value == 0) {
                     esc_down = false;
-                    printf("[hal] ESC UP\n");
+                    printf("[HAL-EXT] ESC UP\n");
                 }
             } else {
                 forward_event(uifd, &ev);

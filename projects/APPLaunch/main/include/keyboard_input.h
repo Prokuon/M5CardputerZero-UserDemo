@@ -40,6 +40,8 @@ extern volatile int LVGL_RUN_FLAGE;
 extern volatile uint32_t LV_EVENT_KEYBOARD;
 
 void *keyboard_read_thread(void *argv);
+const char *kbd_state_name(int state);
+void kbd_dump_keymap_table(void);
 #ifdef __cplusplus
 }
 #endif

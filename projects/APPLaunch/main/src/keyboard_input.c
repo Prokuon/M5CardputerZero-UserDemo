@@ -33,6 +33,74 @@ volatile int LVGL_HOME_KEY_FLAGE = 0;
 volatile int LVGL_RUN_FLAGE = 1;
 volatile uint32_t LV_EVENT_KEYBOARD;
 
+static volatile int keyboard_paused_flag = 0;
+#ifdef __linux__
+static struct libinput *g_libinput = NULL;
+void keyboard_pause(void) {
+    keyboard_paused_flag = 1;
+    if (g_libinput) libinput_suspend(g_libinput);
+    printf("[KBD] keyboard_pause()\n");
+}
+void keyboard_resume(void) {
+    if (g_libinput) libinput_resume(g_libinput);
+    keyboard_paused_flag = 0;
+    printf("[KBD] keyboard_resume()\n");
+}
+#else
+void keyboard_pause(void) { keyboard_paused_flag = 1; }
+void keyboard_resume(void) { keyboard_paused_flag = 0; }
+#endif
+
+/* ============================================================
+ *  Debug: key_state name
+ * ============================================================ */
+const char *kbd_state_name(int state)
+{
+    switch (state) {
+    case 0:  return "UP";
+    case 1:  return "DOWN";
+    case 2:  return "REPEAT";
+    default: return "???";
+    }
+}
+
+/* ============================================================
+ *  Debug: dump all ASCII printable + letter + digit mappings once
+ *  Call on startup so we can see how each key_code maps to utf8.
+ * ============================================================ */
+#ifdef __linux__
+void kbd_dump_keymap_table(void)
+{
+    /* Linux evdev KEY_* values we care about: 2..53 covers 1..0 qwerty zxcvbnm */
+    static const struct { uint32_t code; const char *name; } keys[] = {
+        {KEY_1,"1"},{KEY_2,"2"},{KEY_3,"3"},{KEY_4,"4"},{KEY_5,"5"},
+        {KEY_6,"6"},{KEY_7,"7"},{KEY_8,"8"},{KEY_9,"9"},{KEY_0,"0"},
+        {KEY_Q,"q"},{KEY_W,"w"},{KEY_E,"e"},{KEY_R,"r"},{KEY_T,"t"},
+        {KEY_Y,"y"},{KEY_U,"u"},{KEY_I,"i"},{KEY_O,"o"},{KEY_P,"p"},
+        {KEY_A,"a"},{KEY_S,"s"},{KEY_D,"d"},{KEY_F,"f"},{KEY_G,"g"},
+        {KEY_H,"h"},{KEY_J,"j"},{KEY_K,"k"},{KEY_L,"l"},
+        {KEY_Z,"z"},{KEY_X,"x"},{KEY_C,"c"},{KEY_V,"v"},{KEY_B,"b"},
+        {KEY_N,"n"},{KEY_M,"m"},
+        {KEY_MINUS,"-"},{KEY_EQUAL,"="},{KEY_LEFTBRACE,"["},{KEY_RIGHTBRACE,"]"},
+        {KEY_SEMICOLON,";"},{KEY_APOSTROPHE,"'"},{KEY_GRAVE,"`"},
+        {KEY_BACKSLASH,"\\"},{KEY_COMMA,","},{KEY_DOT,"."},{KEY_SLASH,"/"},
+        {KEY_SPACE,"SPACE"},{KEY_ENTER,"ENTER"},{KEY_ESC,"ESC"},
+        {KEY_BACKSPACE,"BS"},{KEY_TAB,"TAB"},
+        {KEY_UP,"UP"},{KEY_DOWN,"DOWN"},{KEY_LEFT,"LEFT"},{KEY_RIGHT,"RIGHT"},
+        {KEY_HOME,"HOME"},{KEY_END,"END"},{KEY_DELETE,"DEL"},{KEY_INSERT,"INS"},
+        {KEY_LEFTSHIFT,"LSHIFT"},{KEY_LEFTCTRL,"LCTRL"},{KEY_LEFTALT,"LALT"},
+    };
+    printf("[KBD] ==== evdev key_code -> label table ====\n");
+    for (size_t i = 0; i < sizeof(keys)/sizeof(keys[0]); i++) {
+        printf("[KBD]   code=%3u  %s\n", keys[i].code, keys[i].name);
+    }
+    printf("[KBD] ==== end ====\n");
+    fflush(stdout);
+}
+#else
+void kbd_dump_keymap_table(void) {}
+#endif
+
 
 #if !LV_USE_SDL
 /* ============================================================
@@ -252,9 +320,22 @@ static void enqueue_key(const struct key_item *src) {
     *elm = *src;
     elm->flage = 0;  // 标记需要 free
 
+    /* DEBUG: every raw key event from keyboard thread */
+    char utf8_dbg[64] = "";
+    int di = 0;
+    for (int i = 0; i < (int)sizeof(elm->utf8) && elm->utf8[i] && di < 60; i++) {
+        unsigned char c = (unsigned char)elm->utf8[i];
+        if (c >= 0x20 && c < 0x7f) utf8_dbg[di++] = (char)c;
+        else di += snprintf(utf8_dbg+di, 64-di, "\\x%02x", c);
+    }
+    utf8_dbg[di] = '\0';
+    printf("[KBD] enqueue code=%u state=%s sym=%s utf8='%s' cp=0x%x mods=0x%x run=%d home_flag=%d\n",
+           elm->key_code, kbd_state_name(elm->key_state), elm->sym_name,
+           utf8_dbg, elm->codepoint, elm->mods, LVGL_RUN_FLAGE, LVGL_HOME_KEY_FLAGE);
 
     if(elm->key_code == KEY_ESC) {
         LVGL_HOME_KEY_FLAGE = elm->key_state;
+        printf("[KBD] LVGL_HOME_KEY_FLAGE := %d\n", LVGL_HOME_KEY_FLAGE);
     }
 
     if(LVGL_RUN_FLAGE)
@@ -265,6 +346,7 @@ static void enqueue_key(const struct key_item *src) {
     }
     else
     {
+        printf("[KBD] dropped (LVGL_RUN_FLAGE=0, external app running)\n");
         free(elm);
     }
 
@@ -556,15 +638,21 @@ void *keyboard_read_thread(void *argv) {
         { .fd = kc.repeat_fd, .events = POLLIN },
     };
 
+    g_libinput = kc.li;
     printf("开始监听键盘输入 (%s)\n", device_path);
     libinput_dispatch(kc.li);
 
     while (1) {
-        int pr = poll(pfds, 2, -1);
+        if (keyboard_paused_flag) {
+            usleep(50000);
+            continue;
+        }
+        int pr = poll(pfds, 2, 100);
         if (pr < 0) {
             if (errno == EINTR) continue;
             perror("poll"); break;
         }
+        if (pr == 0) continue;
 
         /* 键盘事件 */
         if (pfds[0].revents & POLLIN) {

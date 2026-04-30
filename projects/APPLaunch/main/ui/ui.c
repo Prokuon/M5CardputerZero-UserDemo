@@ -158,6 +158,7 @@ void font_manager_init(void)
 
 void home_screen_load()
 {
+    printf("[HOME] home_screen_load() - loading launcher home screen\n");
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_Screen1);
     lv_indev_set_group(lv_indev_get_next(NULL), Screen1group);

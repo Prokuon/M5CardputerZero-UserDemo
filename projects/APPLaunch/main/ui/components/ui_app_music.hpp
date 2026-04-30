@@ -250,9 +250,17 @@ private:
 
     void event_handler(lv_event_t *e)
     {
-        if (lv_event_get_code(e) != LV_EVENT_KEY) return;
-        uint32_t key = fzxc_to_lv_arrow(lv_event_get_key(e));
-        printf("[Music] key:%u  view:%d\n", key, (int)view_state_);
+        lv_event_code_t ec = lv_event_get_code(e);
+        if (ec == (lv_event_code_t)LV_EVENT_KEYBOARD) {
+            struct key_item *elm = (struct key_item *)lv_event_get_param(e);
+            printf("[MUSIC][KEYBOARD] code=%u state=%s sym=%s view=%d\n",
+                   elm->key_code, kbd_state_name(elm->key_state), elm->sym_name, (int)view_state_);
+            return;
+        }
+        if (ec != LV_EVENT_KEY) return;
+        uint32_t raw = lv_event_get_key(e);
+        uint32_t key = fzxc_to_lv_arrow(raw);
+        printf("[MUSIC][LV_KEY] raw=%u mapped=%u view=%d\n", raw, key, (int)view_state_);
         switch (view_state_)
         {
         case ViewState::MAIN:       handle_main_key(key);     break;
@@ -274,7 +282,7 @@ private:
         case LV_KEY_RIGHT: next_track();          break;
         case 15:           open_folder_browser(); break; // (Tab)
         case 'p':          open_playlist();       break;
-        case LV_KEY_ESC:   go_back_home();        break;
+        case LV_KEY_ESC:   printf("[MUSIC] ESC -> go_back_home()\n"); go_back_home();        break;
         default: break;
         }
     }

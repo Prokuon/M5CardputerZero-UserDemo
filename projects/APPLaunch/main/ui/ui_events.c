@@ -318,6 +318,8 @@ void main_key_switch(lv_event_t *e)
 
     struct key_item *elm = (struct key_item *)lv_event_get_param(e);
     uint32_t code = fzxc_to_arrow(elm->key_code);
+    printf("[LAUNCHER] main_key_switch raw=%u->code=%u state=%s sym=%s\n",
+           elm->key_code, code, kbd_state_name(elm->key_state), elm->sym_name);
     if (elm->key_state)
     {
         switch (code)

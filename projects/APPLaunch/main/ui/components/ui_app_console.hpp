@@ -313,6 +313,9 @@ private:
         if (lv_event_get_code(e) == LV_EVENT_KEYBOARD)
         {
             struct key_item *elm = (struct key_item *)lv_event_get_param(e);
+            printf("[CONSOLE] code=%u state=%s sym=%s utf8_len=%zu pty_active=%d waiting_exit=%d\n",
+                   elm->key_code, kbd_state_name(elm->key_state), elm->sym_name,
+                   strlen(elm->utf8), (int)terminal_active, (int)waiting_key_to_exit);
             if (waiting_key_to_exit && (elm->key_state == 0))
             {
                 if (terminal_sysplause)
@@ -330,11 +333,12 @@ private:
             {
                 if (pty_handle != NULL && terminal_active)
                 {
-                    if (elm->key_state)
+                    if (elm->key_state) {
+                        printf("[CONSOLE] -> PTY write (state=%s)\n", kbd_state_name(elm->key_state));
                         write_key_to_pty(elm->key_code, elm->utf8);
+                    }
                 }
             }
-            printf("Received LV_EVENT_KEYBOARD event: elm=%s\n", elm->sym_name);
         }
     }
 

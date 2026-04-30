@@ -240,16 +240,19 @@ public:
     static void lv_go_back_home(void *arg)
     {
         auto self = (app_launch_S *)arg;
+        printf("[HOME] lv_go_back_home executing (page=%p)\n", self->app_Page.get());
         lv_timer_enable(true);
         lv_indev_set_group(lv_indev_get_next(NULL), Screen1group);
         lv_disp_load_scr(ui_Screen1);
         lv_refr_now(NULL);
         if (self->app_Page)
             self->app_Page.reset();
+        printf("[HOME] lv_go_back_home done, on launcher home\n");
     }
 
     void go_back_home()
     {
+        printf("[HOME] go_back_home() requested, scheduling async call (page=%p)\n", app_Page.get());
         lv_async_call(lv_go_back_home, this);
     }
 
