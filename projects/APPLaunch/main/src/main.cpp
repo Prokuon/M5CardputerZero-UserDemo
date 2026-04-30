@@ -9,6 +9,7 @@
 #include <cstring>
 #include <chrono>
 #include "ui/ui.h"
+#include "ui/ui_global_hint.h"
 #include "keyboard_input.h"
 #include "compat/input_keys.h"
 #include "hal/hal_process.h"
@@ -135,6 +136,11 @@ static void keypad_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
                 lv_obj_send_event(root, (lv_event_code_t)LV_EVENT_KEYBOARD, elm);
             }
             // printf("lv_obj_send_event event to root object over\n");
+
+            /* Global on-screen hint overlay (ESC / Shift / SYM).
+             * Called after the page has had a chance to react, and only
+             * READS elm — never frees it. */
+            ui_global_hint_on_key(elm);
 
             data->key = _evdev_process_key(elm->key_code);
             if(data->key)
