@@ -95,3 +95,15 @@ void hal_process_stop(hal_pid_t pid)
     int status;
     waitpid((pid_t)pid, &status, WNOHANG);
 }
+
+void hal_system_shutdown(void)
+{
+    printf("[HAL] shutdown\n");
+    system("sudo shutdown -h now");
+}
+
+void hal_system_reboot(void)
+{
+    printf("[HAL] reboot\n");
+    system("sudo reboot");
+}
