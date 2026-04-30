@@ -378,8 +378,11 @@ private:
                 if (std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count() >= 5)
                 {
                     end_status = 0;
+                    printf("[CONSOLE] ESC held 5s -> kill PTY and go back home\n");
                     self->stop_pty();
-                    // self->terminal_active = false;
+                    self->terminal_active = false;
+                    if (self->go_back_home)
+                        self->go_back_home();
                 }
             }
             else
