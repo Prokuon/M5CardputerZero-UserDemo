@@ -34,7 +34,7 @@ jobs:
       run: |
         cd projects/CardputerZero-Emulator
         mkdir -p dist/CardputerZero-Emulator
-        cp build/cardputer-emu dist/CardputerZero-Emulator/
+        cp build/cardputer-zero-emu dist/CardputerZero-Emulator/
         cp -r build/apps dist/CardputerZero-Emulator/
         cp -r build/assets dist/CardputerZero-Emulator/
         cp -r build/images dist/CardputerZero-Emulator/
@@ -66,7 +66,7 @@ jobs:
       run: |
         cd projects/CardputerZero-Emulator
         mkdir -p dist/CardputerZero-Emulator
-        cp build/cardputer-emu dist/CardputerZero-Emulator/
+        cp build/cardputer-zero-emu dist/CardputerZero-Emulator/
         cp -r build/apps dist/CardputerZero-Emulator/
         cp -r build/assets dist/CardputerZero-Emulator/
         cp -r build/images dist/CardputerZero-Emulator/
@@ -109,11 +109,11 @@ jobs:
       run: |
         cd projects/CardputerZero-Emulator
         mkdir -p dist/CardputerZero-Emulator
-        cp build/cardputer-emu.exe dist/CardputerZero-Emulator/
+        cp build/cardputer-zero-emu.exe dist/CardputerZero-Emulator/
         cp -r build/apps dist/CardputerZero-Emulator/ 2>/dev/null || true
         cp -r build/assets dist/CardputerZero-Emulator/ 2>/dev/null || true
         cp -r build/images dist/CardputerZero-Emulator/ 2>/dev/null || true
-        ldd build/cardputer-emu.exe | grep mingw64 | awk '{print $3}' | while read dll; do
+        ldd build/cardputer-zero-emu.exe | grep mingw64 | awk '{print $3}' | while read dll; do
           cp "$dll" dist/CardputerZero-Emulator/
         done
         cd dist && tar czf ../CardputerZero-Emulator-Windows.tar.gz CardputerZero-Emulator

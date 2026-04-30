@@ -43,6 +43,18 @@ void hal_process_stop(hal_pid_t pid)
     (void)pid;
 }
 
+void hal_system_shutdown(void)
+{
+    printf("[HAL] shutdown (emulator exit)\n");
+    exit(0);
+}
+
+void hal_system_reboot(void)
+{
+    printf("[HAL] reboot (emulator exit)\n");
+    exit(0);
+}
+
 #else
 #include <unistd.h>
 #include <sys/wait.h>
@@ -139,6 +151,18 @@ void hal_process_stop(hal_pid_t pid)
     kill((pid_t)pid, SIGTERM);
     int status;
     waitpid((pid_t)pid, &status, WNOHANG);
+}
+
+void hal_system_shutdown(void)
+{
+    printf("[HAL] shutdown (emulator exit)\n");
+    exit(0);
+}
+
+void hal_system_reboot(void)
+{
+    printf("[HAL] reboot (emulator exit)\n");
+    exit(0);
 }
 
 #endif

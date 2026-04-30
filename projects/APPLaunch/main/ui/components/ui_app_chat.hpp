@@ -31,7 +31,6 @@ public:
     {
         creat_UI();
         event_handler_init();
-        // seed a welcome message
         messages_.push_back({"Welcome to Chat!", false});
         rebuild_messages();
     }
@@ -49,34 +48,7 @@ private:
     std::vector<ChatMsg> messages_;
     std::string input_buf_;
     lv_timer_t *reply_timer_ = nullptr;
-
-    // ==================== helper: styled label ====================
-    static lv_obj_t *make_label(lv_obj_t *parent, const char *text,
-                                int x, int y, uint32_t color = 0xE6EDF3,
-                                const lv_font_t *font = &lv_font_montserrat_12)
-    {
-        lv_obj_t *lbl = lv_label_create(parent);
-        lv_label_set_text(lbl, text);
-        lv_obj_set_pos(lbl, x, y);
-        lv_obj_set_style_text_color(lbl, lv_color_hex(color), LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_font(lbl, font, LV_PART_MAIN | LV_STATE_DEFAULT);
-        return lbl;
-    }
-
-    // ==================== keycode to char ====================
-    static char keycode_to_char(uint32_t key)
-    {
-        if (key >= KEY_1 && key <= KEY_9) return '1' + (key - KEY_1);
-        if (key == KEY_0) return '0';
-        static const char qwerty[] = "qwertyuiop";
-        if (key >= KEY_Q && key <= KEY_P) return qwerty[key - KEY_Q];
-        static const char asdf[] = "asdfghjkl";
-        if (key >= KEY_A && key <= KEY_L) return asdf[key - KEY_A];
-        static const char zxcv[] = "zxcvbnm";
-        if (key >= KEY_Z && key <= KEY_M) return zxcv[key - KEY_Z];
-        if (key == KEY_SPACE) return ' ';
-        return 0;
-    }
+    struct key_item *cur_elm_ = nullptr;
 
     // ==================== canned auto-reply ====================
     static const char *pick_reply()
@@ -135,7 +107,7 @@ private:
 
         // message area (scrollable)
         lv_obj_t *msg_area = lv_obj_create(bg);
-        lv_obj_set_size(msg_area, 320, 104);
+        lv_obj_set_size(msg_area, 320, 96);
         lv_obj_set_pos(msg_area, 0, 22);
         lv_obj_set_style_radius(msg_area, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_color(msg_area, lv_color_hex(0x0D1117), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -154,7 +126,7 @@ private:
         // separator line above input
         lv_obj_t *sep = lv_obj_create(bg);
         lv_obj_set_size(sep, 320, 1);
-        lv_obj_set_pos(sep, 0, 126);
+        lv_obj_set_pos(sep, 0, 118);
         lv_obj_set_style_radius(sep, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_color(sep, lv_color_hex(0x21262D), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_opa(sep, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -164,7 +136,7 @@ private:
         // input area
         lv_obj_t *input_area = lv_obj_create(bg);
         lv_obj_set_size(input_area, 320, 23);
-        lv_obj_set_pos(input_area, 0, 127);
+        lv_obj_set_pos(input_area, 0, 119);
         lv_obj_set_style_radius(input_area, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_color(input_area, lv_color_hex(0x161B22), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_opa(input_area, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -289,7 +261,9 @@ private:
     {
         if (IS_KEY_RELEASED(e))
         {
-            uint32_t key = LV_EVENT_KEYBOARD_GET_KEY(e);
+            struct key_item *elm = (struct key_item *)lv_event_get_param(e);
+            cur_elm_ = elm;
+            uint32_t key = elm->key_code;
             handle_key(key);
         }
     }
@@ -331,10 +305,8 @@ private:
             break;
         }
 
-        // try printable character
-        char ch = keycode_to_char(key);
-        if (ch) {
-            input_buf_ += ch;
+        if (cur_elm_ && cur_elm_->utf8[0]) {
+            input_buf_ += cur_elm_->utf8;
             update_input_display();
         }
     }

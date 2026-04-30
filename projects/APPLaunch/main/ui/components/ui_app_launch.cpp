@@ -8,6 +8,7 @@
 #include "hal/hal_filesystem.h"
 #include "hal/hal_process.h"
 #include "hal/hal_settings.h"
+#include "hal/hal_audio.h"
 #include <unordered_map>
 #include <list>
 #include <memory>
@@ -195,6 +196,27 @@ public:
                               img_path("camera.png"), page_v<UICameraPage>);
         app_list.emplace_back("GAME",
                               img_path("gmae.png"), page_v<UIGamePage>);
+
+        {
+            app a{"SHUTDOWN", img_path("SETTING_logo.png"), "", false};
+            a.launch = [](app_launch_S *ctx) {
+                char snd[256];
+                snprintf(snd, sizeof(snd), "%s/shutdown.wav", hal_path_images_dir());
+                hal_audio_play_sync(snd);
+                hal_system_shutdown();
+            };
+            app_list.push_back(std::move(a));
+        }
+        {
+            app a{"REBOOT", img_path("SETTING_logo.png"), "", false};
+            a.launch = [](app_launch_S *ctx) {
+                char snd[256];
+                snprintf(snd, sizeof(snd), "%s/shutdown.wav", hal_path_images_dir());
+                hal_audio_play_sync(snd);
+                hal_system_reboot();
+            };
+            app_list.push_back(std::move(a));
+        }
 
         applications_load();
 
@@ -473,8 +495,8 @@ public:
     void applications_reload()
     {
         // 固定条目数量（Python/STORE/CLI/CLAW/SETTING/MUSIC/AUDIO_PLAYER/IP_PANEL/MATH/STOCKS
-        // + CHAT/e-Mail/FILE/SSH/HACK/MESH/REC/CAMERA/GAME）
-        const int fixed_count = 19;
+        // + CHAT/e-Mail/FILE/SSH/HACK/MESH/REC/CAMERA/GAME/SHUTDOWN/REBOOT）
+        const int fixed_count = 21;
         int sz = (int)app_list.size();
         if (sz > fixed_count)
         {

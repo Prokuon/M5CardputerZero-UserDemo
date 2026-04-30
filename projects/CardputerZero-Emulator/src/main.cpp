@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
     printf("  Modifiers: click Aa/fn/ctrl to toggle\n");
     printf("========================================\n");
 
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     IMG_Init(IMG_INIT_PNG);
 
     int win_w = (int)(SKIN_W * SCALE), win_h = (int)(SKIN_H * SCALE);

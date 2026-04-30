@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include "lvgl/src/widgets/gif/lv_gif.h"
 #include "hal/hal_paths.h"
+#include "hal/hal_audio.h"
 ///////////////////// VARIABLES ////////////////////
 
 
@@ -160,14 +161,17 @@ void home_screen_load()
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_Screen1);
     lv_indev_set_group(lv_indev_get_next(NULL), Screen1group);
+
+    static char _startup_snd[256];
+    snprintf(_startup_snd, sizeof(_startup_snd), "%s/startup.mp3", hal_path_images_dir());
+    hal_audio_play(_startup_snd);
 }
 
-void ui_event_logo_over(lv_event_t * e) { 
-    lv_event_code_t event_code = lv_event_get_code(e); 
+void ui_event_logo_over(lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
     if(event_code == LV_EVENT_READY) {
         home_screen_load();
-        lv_obj_del(startup_gif);
-    } 
+    }
 }
 
 static char _gif_path[256];
@@ -207,6 +211,9 @@ void ui_init(void)
     input_group_init();
 
     // 显示开机动画（需要 share/images/logo_output.gif，SDL 模式下可能缺失）
+#ifdef HAL_PLATFORM_SDL
+    home_screen_load();
+#else
     {
         char gif_check[256];
         snprintf(gif_check, sizeof(gif_check), "%s/logo_output.gif", hal_path_images_dir());
@@ -214,4 +221,5 @@ void ui_init(void)
         if (_gif_f) { fclose(_gif_f); start_startup_gif(); }
         else { home_screen_load(); }
     }
+#endif
 }
