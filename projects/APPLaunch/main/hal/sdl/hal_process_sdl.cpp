@@ -1,4 +1,6 @@
 #include "../hal_process.h"
+#include <cstdlib>
+#include <cstdio>
 
 #ifdef _WIN32
 #include <windows.h>

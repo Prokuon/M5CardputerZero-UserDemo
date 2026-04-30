@@ -12,12 +12,14 @@
 #include "hal/hal_network.h"
 #include "compat/input_keys.h"
 
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/select.h>
+#endif
 
 // ============================================================
 //  HACK Tools  UIHackPage
@@ -301,6 +303,10 @@ private:
 
     static bool try_connect_port(const char *ip, int port, int timeout_ms)
     {
+#ifdef _WIN32
+        (void)ip; (void)port; (void)timeout_ms;
+        return false;
+#else
         int sock = socket(AF_INET, SOCK_STREAM, 0);
         if (sock < 0) return false;
 
@@ -343,6 +349,7 @@ private:
 
         close(sock);
         return false;
+#endif
     }
 
     void do_port_scan()
