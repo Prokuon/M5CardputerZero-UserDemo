@@ -116,9 +116,20 @@ static void keypad_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
             elm = STAILQ_FIRST(&keyboard_queue);
             STAILQ_REMOVE_HEAD(&keyboard_queue, entries);
 
-            printf("[INDEV] dequeue code=%u state=%s sym=%s active_screen=%p\n",
-                   elm->key_code, kbd_state_name(elm->key_state),
-                   elm->sym_name, (void*)lv_screen_active());
+            {
+                char utf8_dbg[64] = "";
+                int di = 0;
+                for (int i = 0; i < (int)sizeof(elm->utf8) && elm->utf8[i] && di < 60; i++) {
+                    unsigned char c = (unsigned char)elm->utf8[i];
+                    if (c >= 0x20 && c < 0x7f) utf8_dbg[di++] = (char)c;
+                    else di += snprintf(utf8_dbg+di, 64-di, "\\x%02x", c);
+                }
+                utf8_dbg[di] = '\0';
+                printf("[INDEV] dequeue code=%u state=%s sym=%s utf8='%s' cp=0x%x active_screen=%p\n",
+                       elm->key_code, kbd_state_name(elm->key_state),
+                       elm->sym_name, utf8_dbg, elm->codepoint,
+                       (void*)lv_screen_active());
+            }
             lv_obj_t *root = lv_screen_active();
             if (root) {
                 lv_obj_send_event(root, (lv_event_code_t)LV_EVENT_KEYBOARD, elm);
